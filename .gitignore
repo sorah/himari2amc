@@ -1,0 +1,7 @@
+.bundle/
+.terraform/
+vendor/
+*.zip
+src/**/*.js
+src/**/*.js.map
+src/REVISION
