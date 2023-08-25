@@ -18,6 +18,7 @@ locals {
 
 resource "null_resource" "amc-bundle-install" {
   triggers = {
+    path     = path.module
     lockdgst = local.lockdgst
     runtime  = "ruby3.2"
   }
@@ -27,6 +28,7 @@ resource "null_resource" "amc-bundle-install" {
 }
 resource "null_resource" "amc-tsc" {
   triggers = {
+    path   = path.module
     tsdgst = local.tsdgst
   }
   provisioner "local-exec" {
