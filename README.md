@@ -6,7 +6,7 @@ This is a Terraform module to deploy simple Sinatra and TypeScript app to access
 
 - [Himari](https://github.com/sorah/himari) as an upstream IdP
 - TypeScript compiler (`tsc`)
-- Ruby 2.7 runtime and bundler (RBENV_VERSION=2.7)
+- Ruby 3.2 runtime and bundler (RBENV_VERSION=3.2)
 
 ## Deploy
 

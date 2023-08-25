@@ -4,24 +4,24 @@ GEM
     apigatewayv2_rack (0.2.0)
       rack
     aws-eventstream (1.2.0)
-    aws-partitions (1.735.0)
-    aws-sdk-core (3.171.0)
+    aws-partitions (1.812.0)
+    aws-sdk-core (3.181.0)
       aws-eventstream (~> 1, >= 1.0.2)
       aws-partitions (~> 1, >= 1.651.0)
       aws-sigv4 (~> 1.5)
       jmespath (~> 1, >= 1.6.1)
-    aws-sdk-secretsmanager (1.73.0)
-      aws-sdk-core (~> 3, >= 3.165.0)
+    aws-sdk-secretsmanager (1.82.0)
+      aws-sdk-core (~> 3, >= 3.177.0)
       aws-sigv4 (~> 1.1)
-    aws-sigv4 (1.5.2)
+    aws-sigv4 (1.6.0)
       aws-eventstream (~> 1, >= 1.0.2)
-    faraday (2.7.4)
+    faraday (2.7.10)
       faraday-net_http (>= 2.0, < 3.1)
       ruby2_keywords (>= 0.0.4)
     faraday-net_http (3.0.2)
     hashie (5.0.0)
     jmespath (1.6.2)
-    jwt (2.7.0)
+    jwt (2.7.1)
     multi_xml (0.6.0)
     mustermann (3.0.0)
       ruby2_keywords (~> 0.0.1)
@@ -45,24 +45,24 @@ GEM
     omniauth-oauth2 (1.8.0)
       oauth2 (>= 1.4, < 3)
       omniauth (~> 2.0)
-    rack (2.2.6.4)
-    rack-protection (3.0.5)
+    rack (2.2.8)
+    rack-protection (3.0.6)
       rack
     rack-session (1.0.1)
       rack (< 3)
-    rexml (3.2.5)
+    rexml (3.2.6)
     ruby2_keywords (0.0.5)
     secure_headers (6.5.0)
-    sinatra (3.0.5)
+    sinatra (3.0.6)
       mustermann (~> 3.0)
       rack (~> 2.2, >= 2.2.4)
-      rack-protection (= 3.0.5)
+      rack-protection (= 3.0.6)
       tilt (~> 2.0)
     snaky_hash (2.0.1)
       hashie
       version_gem (~> 1.1, >= 1.1.1)
-    tilt (2.1.0)
-    version_gem (1.1.2)
+    tilt (2.2.0)
+    version_gem (1.1.3)
 
 PLATFORMS
   ruby
@@ -75,10 +75,11 @@ DEPENDENCIES
   jwt
   omniauth (>= 2)
   omniauth-himari
+  rack (~> 2.0)
   rack-session
   rexml
   secure_headers (~> 6.5)
-  sinatra
+  sinatra (>= 3.0)
 
 BUNDLED WITH
-   2.3.21
+   2.4.18

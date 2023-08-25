@@ -217,7 +217,7 @@ module Amc
         kid, pkey = current_signing_key
         jwt = JWT.encode(payload, pkey, 'RS256', { kid: kid })
 
-        log('Assuming role...', role_arn: role_arn, jwt_jti: payload.fetch(:jti), jwt_user: username)
+        log('Assuming role...', role_arn: role_arn, jwt_jti: payload.fetch(:jti), jwt_user: username, jwt_kid: kid, jwt: payload)
 
         sts = Aws::STS::Client.new
         resp = sts.assume_role_with_web_identity(

@@ -19,9 +19,10 @@ locals {
 resource "null_resource" "amc-bundle-install" {
   triggers = {
     lockdgst = local.lockdgst
+    runtime  = "ruby3.2"
   }
   provisioner "local-exec" {
-    command = "cd ${path.module}/src && bundle config set path vendor/bundle && BUNDLE_DEPLOYMENT=1 RBENV_VERSION=2.7 bundle install"
+    command = "cd ${path.module}/src && bundle config set path vendor/bundle && BUNDLE_DEPLOYMENT=1 RBENV_VERSION=3.2 bundle install"
   }
 }
 resource "null_resource" "amc-tsc" {
