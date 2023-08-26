@@ -13,3 +13,7 @@ gem 'omniauth-himari'
 gem 'rack-session'
 
 gem 'rack', '~> 2.0' # FIXME: Upgrade to v3
+
+group :development do
+  gem 'puma'
+end

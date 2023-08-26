@@ -8,7 +8,7 @@
     <meta name="robots" content="noindex, nofollow">
 
     <meta name="amc-user" content="<%= ERB::Util.h(JSON.generate(current_user[:claims])) %>">
-    <meta name="amc-release" content="<%= ERB::Util.h(JSON.generate({r: revision_file, fn: lambda_context.invoked_function_arn, v: lambda_context.function_version})) %>">
+    <meta name="amc-release" content="<%= ERB::Util.h(JSON.generate({r: revision_file, fn: lambda_context&.invoked_function_arn, v: lambda_context&.function_version})) %>">
   </head>
 
   <body class='amc-app amc-loading'>

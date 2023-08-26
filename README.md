@@ -57,6 +57,9 @@ Update secret `${var.name}/params` on Secrets Manager with Key/Value pair:
 
 - `roles` claims should have role ARNs.
 
+## Development
+
+Run with AMC_DEV=1, AMC_SELF_ISS, AMC_SIGNING_KEY_ARN, AMC_SECRET_PARAMS_ARN and AMC_HIMARI_SITE environment variable to run in local server.
 
 ## License
 

@@ -9,6 +9,7 @@ require 'open-uri'
 require 'openssl'
 require 'faraday'
 require 'digest/sha2'
+require 'securerandom'
 
 module Amc
   class App < Sinatra::Base
@@ -100,7 +101,7 @@ module Amc
         return nil unless current_user
         return @current_user_userinfo if defined? @current_user_userinfo
 
-        http = Faraday.new(url: ENV.fetch('AMC_EXPECT_ISS'), headers: {'User-Agent' => USER_AGENT, 'Authorization' => "Bearer #{current_user[:token]}"}) do |builder|
+        http = Faraday.new(url: ENV['AMC_EXPECT_ISS'] || env.fetch('amc.himari-site'), headers: {'User-Agent' => USER_AGENT, 'Authorization' => "Bearer #{token}"}) do |builder|
           builder.response :json
           builder.response :raise_error
           builder.adapter :net_http
@@ -205,12 +206,12 @@ module Amc
           aud: 'sts.amazonaws.com',
           sub: "#{role_arn_elems.fetch(4)}:#{role_arn_elems.fetch(5).split(?/).last}:#{claims.fetch('sub')}",
           preferred_username: username,
-          jti: Digest::SHA256.hexdigest("#{lambda_context.invoked_function_arn}\n#{lambda_context.function_version}\n#{lambda_context.aws_request_id}\n"),
+          jti: lambda_context ? Digest::SHA256.hexdigest("#{lambda_context.invoked_function_arn}\n#{lambda_context.function_version}\n#{lambda_context.aws_request_id}\n") : "nolambda-#{SecureRandom.urlsafe_base64(64)}",
           iat: iat.to_i,
           nbf: iat.to_i,
           exp: (iat+300).to_i,
           TransitiveTagKeys: {
-            AmcRequestId: lambda_context.aws_request_id,
+            AmcRequestId: lambda_context&.aws_request_id || "unknown",
             AmcRequestIp: request.ip,
           },
         }
@@ -252,7 +253,7 @@ module Amc
       end
 
       def cachebuster
-        @cachebuster ||= Digest::SHA256.hexdigest("#{lambda_context.invoked_function_arn}\n#{lambda_context.function_version}\n#{revision_file}\n")
+        @cachebuster ||= lambda_context ? Digest::SHA256.hexdigest("#{lambda_context.invoked_function_arn}\n#{lambda_context.function_version}\n#{revision_file}\n") : 'null'
       end
 
       def revision_file
