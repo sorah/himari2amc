@@ -18,6 +18,7 @@ module Amc
     SnippetEnvelope = Struct.new(:k, :exp, :iv, :tag, :ct, keyword_init: true)
     class ExpiredSnippetError < StandardError; end
     class InvalidSnippetError < StandardError; end
+    class InvalidTokenError < StandardError; end
 
     set :root, File.expand_path(File.join(__dir__))
 
@@ -30,12 +31,12 @@ module Amc
       condition do
         case flag
         when true
-          unless current_user
+          unless current_user&.fetch(:cookie, false)
             next redirect('/auth/himari', 302)
           end
-        when :api
+        when :browser_api
           next halt(403, 'x-requested-with') unless env['HTTP_X_REQUESTED_WITH'] == 'amc-client'
-          unless current_user
+          unless current_user&.fetch(:cookie, false)
             next halt(401, 'Login session required')
           end
         end
@@ -63,7 +64,7 @@ module Amc
             xff: env['HTTP_X_FORWARDED_FOR'],
             cip: env['REMOTE_ADDR'],
           },
-          user: current_user&.then do |user|
+          user: data[:user] || current_user&.then do |user|
             {
               sub: user.dig(:claims, 'sub'),
               email: user.dig(:claims, 'email'),
@@ -71,6 +72,7 @@ module Amc
               jti: user.dig(:claims, 'jti'),
               iat: user.dig(:claims, 'iat'),
               exp: user.dig(:claims, 'exp'),
+              bearer: user[:bearer],
             }
           end,
           data: data,
@@ -84,33 +86,79 @@ module Amc
       end
 
       def current_user
-        if session[:user]
-          @current_user ||= begin
+        @current_user ||= begin
+          case
+          when session[:user]
             user = session[:user]
             claims = user[:claims]
             if claims[:exp] <= Time.now.to_i
               warn "Session expired"
               session[:user] = nil 
             end
+            #p session[:user]&.fetch(:token)
             session[:user]
+
+          when env['HTTP_AUTHORIZATION']
+            # https://datatracker.ietf.org/doc/html/rfc9110#section-11.6.2
+            # https://datatracker.ietf.org/doc/html/rfc9110#section-11.4
+            auth_scheme, token = env['HTTP_AUTHORIZATION'].split(/\s+/,2)
+            if auth_scheme&.match?(/bearer/i)
+              user = begin
+                {
+                  claims: fetch_userinfo(token),
+                  token: token,
+                  bearer: true,
+                }
+              rescue Faraday::UnauthorizedError
+                log('Bearer: Unauthorized', user: {})
+                nil
+              rescue InvalidTokenError => e
+                log("Bearer: #{e.inspect}", user: {})
+                nil
+              end
+
+              unless user.fetch(:claims).key?('aud')
+                raise InvalidTokenError, "'aud' claim is mandatory for Bearer token. Maybe Himari is outdated?"
+              end
+
+              user
+            end
           end
         end
       end
 
-      def current_user_userinfo
-        return nil unless current_user
-        return @current_user_userinfo if defined? @current_user_userinfo
-
+      def fetch_userinfo(token)
         http = Faraday.new(url: ENV['AMC_EXPECT_ISS'] || env.fetch('amc.himari-site'), headers: {'User-Agent' => USER_AGENT, 'Authorization' => "Bearer #{token}"}) do |builder|
           builder.response :json
           builder.response :raise_error
           builder.adapter :net_http
         end
-        log('Userinfo: Checking')
-        @current_user_userinfo = http.get("public/oidc/userinfo").body
+        log('Userinfo: Retrieving', user: {})
+        userinfo = http.get("public/oidc/userinfo").body
+
+        expected_aud = [
+          env.fetch('amc.client-id'),
+          *env.fetch('amc.alt-client-ids'),
+        ]
+        unless userinfo.key?('aud') && expected_aud.include?(userinfo['aud'])
+          raise InvalidTokenError, "unexpected 'aud' claim, got=#{userinfo['aud']}"
+        end
+
+        userinfo
+      end
+
+      def current_user_userinfo
+        return nil unless current_user
+        return @current_user_userinfo if defined? @current_user_userinfo
+        log('Userinfo: Checking', user: {})
+        @current_user_userinfo = fetch_userinfo(current_user[:token])
       rescue Faraday::UnauthorizedError
-        log('Userinfo: Unauthorized')
+        log('Userinfo: Unauthorized', user: {})
         halt 401, 'Token Expired'
+      rescue InvalidTokenError => e
+        log("Userinfo: #{e.inspect}", user: {})
+        halt 401, 'Token Invalid'
+
       end
 
       def generate_snippet(body, content_type: 'text/plain; charset=utf-8', expires_in:)
@@ -276,12 +324,13 @@ module Amc
       session[:user] = {
         claims: auth.dig('extra', 'raw_info'),
         token: auth.dig('credentials', 'token'),
+        cookie: true,
       }
       log('logged in')
       redirect '/', 302
     end
 
-    post '/api/signin', auth: :api do
+    post '/api/signin', auth: :browser_api do
       headers 'cache-control' => 'private,no-cache,no-store,max-age=0'
       content_type :json
 
@@ -292,7 +341,7 @@ module Amc
       )
     end
 
-    post '/api/creds', auth: :api do
+    post '/api/creds', auth: :browser_api do
       headers 'cache-control' => 'private,no-cache,no-store,max-age=0'
       content_type :json
 
