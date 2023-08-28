@@ -39,6 +39,10 @@ module Amc
           unless current_user&.fetch(:cookie, false)
             next halt(401, 'Login session required')
           end
+        when :remote_api
+          unless current_user&.fetch(:bearer, false)
+            next halt(401, 'Unauthorized')
+          end
         end
       end
     end
@@ -351,6 +355,20 @@ module Amc
         preferred_region: ENV.fetch('AWS_REGION', 'us-east-1'),
         assume_role_response: assume.to_h,
         envchain_snippet_url: generate_snippet(generate_envchain_text(assume), expires_in: 90),
+      )
+    end
+
+    post '/api/remote/assume-role', auth: :remote_api do
+      headers 'cache-control' => 'private,no-cache,no-store,max-age=0'
+      content_type :json
+
+      assume = assume_role(role_arn: json['Role'])
+      JSON.generate(
+        Version: 1,
+        AccessKeyId: assume.credentials.access_key_id,
+        SecretAccessKey: assume.credentials.secret_access_key,
+        SessionToken: assume.credentials.session_token,
+        Expiration: assume.credentials.expiration.iso8601,
       )
     end
 
