@@ -17,7 +17,7 @@ resource "aws_lambda_function" "amc-web" {
   timeout     = 15
 
   environment {
-    variables = {
+    variables = merge({
       RACK_ENV = "production"
 
       AMC_EXPECT_ISS        = var.idp_issuer
@@ -31,7 +31,7 @@ resource "aws_lambda_function" "amc-web" {
 
       AMC_HTML_HEADER = var.header_html
       AMC_HTML_FOOTER = var.footer_html
-    }
+    }, var.environment_variables)
   }
 }
 

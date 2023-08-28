@@ -1,4 +1,4 @@
-# Himari2amc - Access to AWS from Himari
+# Himari2amc - Access to AWS from [Himari](https://github.com/sorah/himari)
 
 This is a Terraform module to deploy simple Sinatra and TypeScript app to access AWS.
 

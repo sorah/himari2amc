@@ -39,6 +39,11 @@ variable "cloudfront_certificate_arn" {
   description = "CloudFront ACM Certificate ARN"
 }
 
+variable "environment_variables" {
+  type        = map(string)
+  description = "Additional environment variables for web Lambda"
+}
+
 variable "header_html" {
   type        = string
   default     = ""
