@@ -23,7 +23,7 @@ resource "null_resource" "amc-bundle-install" {
     runtime  = "ruby3.2"
   }
   provisioner "local-exec" {
-    command = "cd ${path.module}/src && bundle config set path vendor/bundle && BUNDLE_DEPLOYMENT=1 BUNDLE_WITHOUT=development RBENV_VERSION=3.2 bundle install && BUNDLE_DEPLOYMENT=1 RBENV_VERSION=3.2 bundle clean"
+    command = "cd ${path.module}/src && bundle config set path vendor/bundle && ( export BUNDLE_DEPLOYMENT=1; export BUNDLE_WITHOUT=development; export RBENV_VERSION=3.2; bundle install && bundle clean )"
   }
 }
 resource "null_resource" "amc-tsc" {
