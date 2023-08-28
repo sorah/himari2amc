@@ -31,6 +31,12 @@ resource "aws_lambda_function" "signing_key_rotation" {
 
   memory_size = 128
   timeout     = 15
+
+  environment {
+    variables = {
+      BUNDLE_WITHOUT = "development"
+    }
+  }
 }
 
 resource "aws_lambda_permission" "signing_key_rotation" {

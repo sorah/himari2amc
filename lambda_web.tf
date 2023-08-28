@@ -18,7 +18,8 @@ resource "aws_lambda_function" "amc-web" {
 
   environment {
     variables = merge({
-      RACK_ENV = "production"
+      RACK_ENV       = "production"
+      BUNDLE_WITHOUT = "development"
 
       AMC_EXPECT_ISS        = var.idp_issuer
       AMC_SELF_ISS          = "https://${var.domain_name}"
