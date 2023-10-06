@@ -90,7 +90,8 @@ module Amc
       end
 
       def current_user
-        @current_user ||= begin
+        return @current_user if defined? @current_user
+        begin
           case
           when session[:user]
             user = session[:user]
@@ -100,8 +101,7 @@ module Amc
               session[:user] = nil 
             end
             #p session[:user]&.fetch(:token)
-            session[:user]
-
+            @current_user = session[:user]
           when env['HTTP_AUTHORIZATION']
             # https://datatracker.ietf.org/doc/html/rfc9110#section-11.6.2
             # https://datatracker.ietf.org/doc/html/rfc9110#section-11.4
@@ -115,17 +115,19 @@ module Amc
                 }
               rescue Faraday::UnauthorizedError
                 log('Bearer: Unauthorized', user: {})
-                next nil
+                @current_user = nil
+                return nil
               rescue InvalidTokenError => e
                 log("Bearer: #{e.inspect}", user: {})
-                next nil
+                @current_user = nil
+                return nil
               end
 
               unless user.fetch(:claims).key?('aud')
                 raise InvalidTokenError, "'aud' claim is mandatory for Bearer token. Maybe Himari is outdated?"
               end
 
-              user
+              @current_user = user
             end
           end
         end
