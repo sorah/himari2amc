@@ -115,10 +115,10 @@ module Amc
                 }
               rescue Faraday::UnauthorizedError
                 log('Bearer: Unauthorized', user: {})
-                nil
+                next nil
               rescue InvalidTokenError => e
                 log("Bearer: #{e.inspect}", user: {})
-                nil
+                next nil
               end
 
               unless user.fetch(:claims).key?('aud')
