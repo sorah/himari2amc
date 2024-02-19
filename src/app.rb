@@ -245,7 +245,7 @@ module Amc
         end
       end
 
-      private def assume_role(role_arn: json['role_arn'])
+      private def assume_role(role_arn: json['role_arn'], duration_seconds: nil)
         claims = current_user_userinfo()
         possible_roles = [*claims['roles'], claims['role']].compact
         username = (claims['preferred_username'] || claims['email']) or raise "cannot determine username, available keys: #{claims.keys.inspect}"
@@ -276,7 +276,7 @@ module Amc
 
         sts = Aws::STS::Client.new
         resp = sts.assume_role_with_web_identity(
-          duration_seconds: ENV.fetch('AMC_SESSION_DURATION', 3600),
+          duration_seconds: duration_seconds || ENV.fetch('AMC_SESSION_DURATION', 3600).to_i,
           role_arn: role_arn,
           role_session_name: username,
           web_identity_token: jwt,
@@ -295,7 +295,7 @@ module Amc
           builder.adapter :net_http
         end
 
-        assume = assume_role()
+        assume = assume_role(duration_seconds: ENV['AMC_SESSION_DURATION_CONSOLE']&.to_i)
         session = {sessionId: assume.credentials.access_key_id, sessionKey: assume.credentials.secret_access_key, sessionToken: assume.credentials.session_token}
         resp = http.post("https://#{ENV.fetch('AWS_REGION', 'us-east-1')}.signin.aws.amazon.com/federation", {'Action' => 'getSigninToken', 'Session' => JSON.generate(session)})
 
@@ -351,7 +351,7 @@ module Amc
       headers 'cache-control' => 'private,no-cache,no-store,max-age=0'
       content_type :json
 
-      assume = assume_role()
+      assume = assume_role(duration_seconds: ENV['AMC_SESSION_DURATION_KEY']&.to_i)
       JSON.generate(
         ok: true,
         preferred_region: ENV.fetch('AWS_REGION', 'us-east-1'),
@@ -364,7 +364,7 @@ module Amc
       headers 'cache-control' => 'private,no-cache,no-store,max-age=0'
       content_type :json
 
-      assume = assume_role(role_arn: json['Role'])
+      assume = assume_role(role_arn: json['Role'], duration_seconds: ENV['AMC_SESSION_DURATION_API']&.to_i)
       JSON.generate(
         Version: 1,
         AccessKeyId: assume.credentials.access_key_id,
