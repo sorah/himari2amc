@@ -1,0 +1,6 @@
+vendor/
+.bundle/
+.terraform/
+vendor/
+*.zip
+

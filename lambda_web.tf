@@ -8,8 +8,12 @@ resource "aws_lambda_function" "amc-web" {
   filename         = "${path.module}/amc.zip"
   source_code_hash = data.archive_file.amc.output_base64sha256
   handler          = "web.Main.handle"
-  runtime          = "ruby3.4"
-  architectures    = ["arm64"]
+
+  runtime       = "ruby3.4"
+  architectures = ["x86_64"]
+  layers = [
+    aws_lambda_layer_version.bundle.arn,
+  ]
 
   role = aws_iam_role.amc.arn
 
