@@ -24,7 +24,7 @@ resource "aws_lambda_function" "signing_key_rotation" {
   filename         = "${path.module}/amc.zip"
   source_code_hash = data.archive_file.amc.output_base64sha256
   handler          = "key_rotation.handler"
-  runtime          = "ruby3.2"
+  runtime          = "ruby3.4"
   architectures    = ["arm64"]
 
   role = aws_iam_role.amc.arn
